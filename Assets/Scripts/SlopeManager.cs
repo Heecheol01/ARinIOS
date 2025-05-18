@@ -5,16 +5,18 @@ using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using UnityEngine.UI;
 
-public class RulerManager : MonoBehaviour
+public class SlopeManager : MonoBehaviour
 {
-    public ARRaycastManager m_RaycastManager;
-    public GreenSlopePipeline greenSlope;
+    public ARRaycastManager raycastManager;
+    // public GreenSlopePipeline greenSlope;
+    public GreenSlopeRT greenSlope;
     
-    static List<ARRaycastHit> s_Hits = new List<ARRaycastHit>();
+    static List<ARRaycastHit> _hits = new List<ARRaycastHit>();
     public Vector2 centerVec;
     public Transform pivot;
-    public Transform camPivot;
+    public GameObject prefab;
 
+    private List<GameObject> _points = new List<GameObject>();
     private Vector3 _startPos;
     private Vector3 _endPos;
     private bool _rulerEnable;
@@ -31,10 +33,10 @@ public class RulerManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(m_RaycastManager.Raycast(centerVec, s_Hits, TrackableType.PlaneWithinPolygon))
+        if(raycastManager.Raycast(centerVec, _hits, TrackableType.PlaneWithinPolygon))
         {
-            _poseSave = s_Hits[0].pose; // 첫번째로 측정된 면의 정보를 가져옴.
-            float hitDis = s_Hits[0].distance;
+            _poseSave = _hits[0].pose; // 첫번째로 측정된 면의 정보를 가져옴.
+            float hitDis = _hits[0].distance;
             if(hitDis < 0.1f) hitDis = 0.1f;
             if(hitDis > 0.5f) hitDis = 0.5f;
             hitDis = hitDis * -0.25f + 1.45f;
@@ -59,13 +61,14 @@ public class RulerManager : MonoBehaviour
         Vector3 b = _endPos;
 
         Debug.Log($"▶ RulerManager ▸ StartSlopeAnalysis A:{a:F3}  B:{b:F3}");
-        greenSlope.StartSlopeAnalysis(a, b, _poseSave);
+        greenSlope.StartSlopeAnalysis(a, b);
     }
 
     public void MakeRulerObj()
     {
         if (_count % 2 == 0)
         {
+            // greenSlope.ClearMeshes();
             MakeStartAnchor();
         }
         else if (_count % 2 == 1)
@@ -79,10 +82,12 @@ public class RulerManager : MonoBehaviour
     private void MakeStartAnchor()
     {
         _startPos = _rulerPosSave;
+        _points.Add(Instantiate(prefab, _startPos, pivot.rotation));
     }
 
     private void MakeEndAnchor()
     {
        _endPos = _rulerPosSave;
+       _points.Add(Instantiate(prefab, _endPos, pivot.rotation));
     }
 }
